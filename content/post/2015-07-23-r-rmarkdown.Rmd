@@ -1,41 +1,89 @@
 ---
-title: "cesR Data Analysis "
-author: "MZ3063"
-date: 2020-09-30
-Bibliography: "reference.bib"
-categories: ["R"]
-tags: ["R Markdown", "plot", "regression"]
+title: 'COVID-19 In Toronto Data Analysis '
+author: "Mingkai Zhang 1004903063"
+date: '2020-10-02'
+Bibliography: reference.bib
+categories: R
+tags:
+- R Markdown
+- plot
+- regression
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE)
 ```
 
-# R Markdown
+#Question1
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# Part a
+```{r}
+#install.packages("opendatatoronto") 
+#devtools::install_github("sharlagelfand/opendatatoronto")
+library(opendatatoronto)
+library(tidyverse)
+library(visdat)
+library(skimr)
+library(opendatatoronto)
+library(dplyr)
+#cesR::get_decon()
 
-You can embed an R code chunk like this @citetidyverse:
-
-```{r cars}
-summary(cars)
-fit <- lm(dist ~ speed, data = cars)
-fit
 ```
 
-# Including Plots
-
-You can also embed plots. See Figure \@ref(fig:pie) for example:
-
-```{r pie, fig.cap='A fancy pie chart.', tidy=FALSE}
-par(mar = c(0, 1, 0, 1))
-pie(
-  c(280, 60, 20),
-  c('Sky', 'Sunny side of pyramid', 'Shady side of pyramid'),
-  col = c('#0292D8', '#F7EA39', '#C4B632'),
-  init.angle = -50, border = NA
-)
+```{r}
+package <- show_package("64b54586-6180-4485-83eb-81e8fae3b8fe")
+resources <- list_package_resources("64b54586-6180-4485-83eb-81e8fae3b8fe")
+datastore_resources <- filter(resources, tolower(format) %in% c('csv', 'geojson'))
+data <- filter(datastore_resources, row_number()==1) %>% get_resource()
 ```
+
+  + The dataset is about COVID-19 cases in Toronto, and it contains patients' demographic and geographic data since the first case was reported. The reason why I choose this data is that COVID-19 is one of the biggest concerns of this year. This dataset provides more detailed and full-scale information about COVID-19 than what I get from media.So, after analyze dataset of COVID-19, I could get a comprehensive understand of COVID-19 cases in Toronto.It is interesting because I believe there is some unexpected results by analyze the dataset, and the topic of COVID-19 really attracts me.
+
+  + A merit of this dataset is that it update weekly, so I could analyze the latest data. But, this dataset contains too many information to depth analynze one aspect. In my analysis,I will focus on the reported date of every COVID-19 cases because it shows the change in number of confirmed in Toronto by the time. 
+
+# Part b
+```{r}
+library(ggplot2)
+library(scales)
+data$`Reported Date` <- as.Date(data$`Reported Date`)
+ggplot(data, aes(x=`Reported Date`)) + geom_histogram(binwidth=30, colour="white") +
+       scale_x_date(labels = date_format("%Y-%b"),
+                    breaks = seq(min(data$`Reported Date`)-5, max(data$`Reported Date`)+5, 30)) +
+         xlab("Time")
+
+```
+
+  + The histogram above shows the amount of confirmed caese of COVID-19 by the time. In April 2020,the confirmed cases is highest.And, in January and Febuary the confirmed cases close to zero. The graph is not simliar to normal distribution.
+
+# Part c
+```{r}
+data%>%
+  count(`Age Group`,Classification)%>%
+  filter(Classification=="CONFIRMED")%>%
+  #group_by(`Age Group`)%>%
+  summarise(`Age Group`, num_of_confirmed=n)
+
+data%>%
+  ggplot(aes(x=as.factor(data$`Age Group`)))+geom_bar(stat = 'count',bins=10)+labs(x="Age Group")
+
+```
+
+  + The table and the bar plot shows the amount of confirmed cases in each age groups. The 20 to 29 age group get highest amount of cases.And,there is 3 people ungrouped becasue the missing age data.
+
+
+# Part d
+
+
+  + Without summarizing the data of age group and number of confirmed, my hypothesis is the old group people has the most confirmed cases.But, according to the summary from question(c), we could see the people between 20 and 29 ages has the most confirmed cases. Unexpectedly, the oldest group,90 and older, has the least confirmed cases.It might because the overall population of older group is less than the younger group. And, there are 3 people do not belong to any Age Group, so it might be missing of data which is their ages not be collected.
+
+  + According to the histogram in part(B),we could see the COVID-19 confirmed cases boom in April 2020, and May 2020 remain the high amount of confirmed cases.Although the first case was discovered in January 2020, there is few cases during January and February 2020. The COVID-19 cases started declining in June 2020, but raised in August again. Nowadays,there is still about 1000 COVID-19 cases in Toronto.
+
+  + In conclusion, the COVID-19 outbreak peak is in April 2020, and it rebounds in August 2020 again. The people between20 and 29 ages have most confirmed cases of COVID-19. The confirmed cases generally declined as the age group older.
 
 
 #Reference 
+
+
+1. Wickham et al., (2019). Welcome to the tidyverse. Journal of Open Source Software,
+  4(43), 1686, https://doi.org/10.21105/joss.01686
+  
